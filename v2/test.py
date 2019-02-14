@@ -19,13 +19,14 @@ def launch_master_thread(n, ids, root, conn_matrix):
     print(f'In master thread. Launching {n} threads..')
     # establish communication channels
     q = Queue()  # master comm channel
+    qhead = None
     # create threads
     for p_id, conn in zip(ids, conn_matrix):
         neighbor_ids = []
         for i in range(len(conn)):
             if conn[i] == 1 and id_label[i] != int(p_id):
                 neighbor_ids.append(id_label[i])
-        process = Process(int(p_id), root, neighbor_ids, q)
+        process = Process(int(p_id), root, neighbor_ids, q, qhead)
         id_process[p_id] = process
     # start all processes
     for v in id_process.values():

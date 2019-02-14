@@ -10,8 +10,11 @@ class process_thread(threading.Thread):
         self.threadID = threadID
         self.children = []
         self.conn = conn
+        self.rootid = rootid
         self.q = q
-        if self.threadID == root:
+        self.parent=None
+        if str(self.threadID) == str(self.rootid):
+            print('marked')
             self.mark = True
             self.parent = 'Dummy'
         else:
@@ -19,6 +22,15 @@ class process_thread(threading.Thread):
             self.parent = None
 
     def run(self):
+        '''
+        if str(self.threadID) == str(self.rootid):
+            print('marked')
+            self.mark = True
+            self.parent = 'Dummy'
+        else:
+            self.mark = False
+            self.parent = None
+        '''
         self.neighbors = []
         self.neighbor_ids = []
         for i in range(len(self.conn)):
@@ -29,13 +41,27 @@ class process_thread(threading.Thread):
             if n!= self.threadID:
                 self.neighbors.append(id_process[n])
         '''
-        print(f'{self.threadID}: my neighbors are {self.neighbor_ids}')
+        print(f'{self.threadID}: my neighbors are {self.neighbor_ids}, my mark {self.mark}')
+        if self.mark:
+            self.q.put(f'{self.threadID}|2|test')
+            print(f'msg sent from {self.threadID}')
         while True:
-            incoming_msg = self.q.get()
-            if incoming_msg is _terminate:
+            #self.q, msg = queue_peek(self.q)
+            msg = self.q.get()
+            sender = msg.split('|')[0]
+            rec = msg.split('|')[1]
+            mtype = msg.split('|')[2]
+            print(f'{rec}:{self.threadID}')
+            print(f'{self.q.empty()}')
+            if str(rec)==str(self.threadID):
+                print(f'{self.threadID}: msg {msg} intended for me')
+                #incoming_msg = self.q.get()
+                #print(f'{self.threadID}: msg {incoming_msg} taken out of q')
+            if mtype=="_terminate":
                 print(f'Exiting {self.threadID}; parent: {self.parent} children: {self.children}')
                 break
-            print(f'- Process {self.threadID} | Round {incoming_msg}')
+            
+            #print(f'- Process {self.threadID} | Round {incoming_msg}')
             # take care of recieved msgs
             '''
             # send msgs
@@ -53,18 +79,27 @@ class process_thread(threading.Thread):
             print(f'Exiting {self.threadID}; parent: {self.parent} children: {self.children}')
             '''
 
-
+#message format: {sender}|{receipient}|{dir}
 def broadcast(q,n, msg):
     print(f'broadcasting {msg}')
-    for i in range(n):
-        q.put(msg)
+    for i in range(1,n+1):
+        msg_complete = f'master|{i}|b'
+        q.put(msg_complete)
+
+#peek function in queue
+def queue_peek(q):
+    obj = q.get()
+    tmp_q = Queue()
+    tmp_q.put(obj)
+    while not q.empty():
+        tmp_obj = q.get()
+        tmp_q.put(tmp_obj)
+    return tmp_q, obj
 
 def launch_master_thread(n, ids, root, conn_matrix):
     global id_process, id_label, _terminate
     print(f'In master thread. Launching {n} threads..')
-    # establish communication channels
     q = Queue() # master comm channel
-    # create threads
     i=0
     for p_id, conn in zip(ids, conn_matrix):
         id_label[i] = p_id
@@ -75,13 +110,13 @@ def launch_master_thread(n, ids, root, conn_matrix):
     # start all processes
     for v in id_process.values():
             v.start()
+    '''
     # for each round
     for i in range(3):
             print(f'***** Round {i} ********')
-            broadcast(q,n,i)
-    broadcast(q,n,_terminate)
-    
-    '''
+            broadcast(q,n,f'Round-{i}')
+    broadcast(q,n,"_terminate")
+
     parents_found = False
     round=0
     while not parents_found:
@@ -117,7 +152,6 @@ if __name__=="__main__":
             connectivity_matrix[row][j] = int(connectivity_matrix[row][j])
     id_process = {}
     id_label = {} 
-    _terminate = object()
     master_thread = threading.Thread(name='master',target=launch_master_thread, args=(n, ids, root, connectivity_matrix))
     master_thread.start()    
 

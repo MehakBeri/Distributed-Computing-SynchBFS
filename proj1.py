@@ -5,13 +5,12 @@ import sys
 
 class process_thread(threading.Thread):
     global id_process, id_label
-    def __init__(self, threadID, rootid, conn, q, q_sub):
+    def __init__(self, threadID, rootid, conn, q):
         threading.Thread.__init__(self)
         self.threadID = threadID
         self.children = []
         self.conn = conn
         self.q = q
-        self.q_sub = q_sub
         if self.threadID == root:
             self.mark = True
             self.parent = 'Dummy'
@@ -23,7 +22,7 @@ class process_thread(threading.Thread):
         self.neighbors = []
         self.neighbor_ids = []
         for i in range(len(self.conn)):
-            if self.conn[i]==1 && id_label[i]!=self.threadID:
+            if (self.conn[i]==1 and id_label[i]!=self.threadID):
                 self.neighbor_ids.append(id_label[i])
         '''
         for n in self.neighbor_ids: # might not need thread objects passed since sending msgs now
@@ -33,19 +32,18 @@ class process_thread(threading.Thread):
         print(f'{self.threadID}: my neighbors are {self.neighbor_ids}')
         while True:
             incoming_msg = self.q.get()
-            node_msg = self.q_sub.get()
             if incoming_msg is _terminate:
                 print(f'Exiting {self.threadID}; parent: {self.parent} children: {self.children}')
                 break
             print(f'- Process {self.threadID} | Round {incoming_msg}')
             # take care of recieved msgs
-
+            '''
             # send msgs
             if self.mark: 
                 print(f'---> {self.threadID} marked')
                 msg = self.neighbor_ids
                 broadcast(q_sub, msg) # N IS NOT KNOWN, MAKE INDIVIDUAL QUEUES FOR EACH COMM CHANNEL   
-            '''
+            
                     if not n.mark:
                         print('Round {incoming_msg}: {n.threadID} is not marked and found by {self.threadID}')
                         n.parent = self
@@ -57,6 +55,7 @@ class process_thread(threading.Thread):
 
 
 def broadcast(q,n, msg):
+    print(f'broadcasting {msg}')
     for i in range(n):
         q.put(msg)
 
@@ -65,14 +64,12 @@ def launch_master_thread(n, ids, root, conn_matrix):
     print(f'In master thread. Launching {n} threads..')
     # establish communication channels
     q = Queue() # master comm channel
-    # make comm channel for all comms between all processes =n* n-1 can later make lesser?? or broadcast
-    q_sub = Queue() #for only communication between processes
     # create threads
     i=0
     for p_id, conn in zip(ids, conn_matrix):
         id_label[i] = p_id
         i += 1
-        process = process_thread(p_id, root, conn, q, q_sub)
+        process = process_thread(p_id, root, conn, q)
         id_process[p_id] = process
     print(id_label)
     # start all processes

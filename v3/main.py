@@ -1,6 +1,7 @@
 from queue import Queue
 from message import Message
 from process import Process
+from message import MsgType
 import threading
 import time
 import sys
@@ -8,7 +9,7 @@ import sys
 #message format: {sender}|{receipient}|{dir}
 def broadcast(q, r, id_process):
     for id in ids:
-        msg= Message('Master',id,f'broadcast{r}')
+        msg= Message('Master', id, MsgType.BROADCAST)
         q.put(msg)
 
 #peek function in queue

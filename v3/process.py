@@ -1,4 +1,5 @@
 from message import Message
+from message import MsgType
 from queue import Queue
 import threading
 import time
@@ -47,8 +48,9 @@ class Process(threading.Thread):
     def set_parent(self, parent):
         self.parent = parent
 
+
     def send_message(self, receiver):
-        msg = Message(self.pid, int(receiver), 'inter-thread')
+        msg = Message(self.pid, int(receiver), MsgType.INTER_PROCESS)
         #print(f'{self.pid}: sending {msg} to queue, {self.q.qsize()}')
         threadLock.acquire()
         self.q.put(msg)

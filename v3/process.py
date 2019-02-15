@@ -29,7 +29,7 @@ class Process(threading.Thread):
             threadLock.acquire()
             tmp = self.q.get()
             threadLock.release()
-            if tmp.receiverID == self.pid and tmp.msg_type=='inter-thread':
+            if tmp.receiverID == self.pid and tmp.msg_type == MsgType.INTER_PROCESS:
                 print(f'{self.pid} : Receiving msg {tmp.msg_type}, {self.q.qsize()}')
                 self.receive_message(tmp.senderID)
                 break

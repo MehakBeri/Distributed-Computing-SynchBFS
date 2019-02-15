@@ -13,36 +13,25 @@ class Process(threading.Thread):
         self.neighbor_ids = neighbor_ids
         self.root_id = root_id
         self.q = q
-        self.start_signal = False
         self.marked = False
+        self.parent=None
+        self.children=[]
         if int(self.pid) == int(self.root_id):
             self.marked = True
     
     def run(self):
-        print(f'{self.pid}: my neighbors are {self.neighbor_ids}. {self.root_id} Marking: {self.marked}, {self.q.qsize()}')
+        #print(f'{self.pid}: my neighbors are {self.neighbor_ids}. {self.root_id} Marking: {self.marked}, {self.q.qsize()}')
         self._run()
-        '''
-        if not self.start_signal:
-            threadLock.acquire()
-            brd = self.q.get()
-            threadLock.release()
-            if brd.senderID == 'Master' and brd.receiverID == self.pid:
-                print(f'{self.pid}: broadcast msg received {brd.msg_type}. Starting to run, {self.q.qsize()}')
-                self.start_signal = True
-                self._run()
-            else:
-                threadLock.acquire()
-                self.q.put(brd)
-                threadLock.release()
-        '''
     def _run(self):
-        while self.marked != True: #and self.start_signal:
+        if not self.marked:
+          while self.marked != True: #and self.start_signal:
             threadLock.acquire()
             tmp = self.q.get()
             threadLock.release()
             if tmp.receiverID == self.pid and tmp.msg_type=='inter-thread':
                 print(f'{self.pid} : Receiving msg {tmp.msg_type}, {self.q.qsize()}')
                 self.receive_message(tmp.senderID)
+                break
             else:
                 threadLock.acquire()
                 self.q.put(tmp)
@@ -51,14 +40,16 @@ class Process(threading.Thread):
         # Get lock to synchronize threads
         if self.marked and len(self.neighbor_ids) > 0:
             for i in range(len(self.neighbor_ids)):
-                self.send_message(self.neighbor_ids[i])
+                if self.parent != self.neighbor_ids[i]:
+                    self.send_message(self.neighbor_ids[i])
+        print(f'{self.pid}: I am done')
 
     def set_parent(self, parent):
         self.parent = parent
 
     def send_message(self, receiver):
         msg = Message(self.pid, int(receiver), 'inter-thread')
-        print(f'{self.pid}: sending {msg} to queue, {self.q.qsize()}')
+        #print(f'{self.pid}: sending {msg} to queue, {self.q.qsize()}')
         threadLock.acquire()
         self.q.put(msg)
         threadLock.release()
@@ -69,7 +60,7 @@ class Process(threading.Thread):
         # Mark the process
         self.marked = True
         self.set_parent(sender)
-        print("{} -- Parent set to {}".format(self.pid, self.parent))
+        #print("{} -- Parent set to {}".format(self.pid, self.parent))
 
 
 def print_time(threadName, counter):

@@ -39,10 +39,6 @@ def launch_master_thread(n, ids, root, conn_matrix):
     print(id_label)
     for v in id_process.values():
             v.start()
-    broadcast(q,0,ids)
-    time.sleep(5)
-    print(q.qsize())
-    '''
     rounds = 2
     for r in range(rounds):
         print(f'Master: Sending round {r} signal')
@@ -50,12 +46,13 @@ def launch_master_thread(n, ids, root, conn_matrix):
         # do not move to next round until recieve done signal from all processes 
         done_dict = {pid:False for pid in ids}
         while False in done_dict.values():
-            print(f'check q status: {q.qsize()}')
+            #print(f'check q status: {q.qsize()}')
             temp = q.get()
             if temp.receiverID == 'Master':
                 done_dict[temp.msg_type] = True
+            else:
+                q.put(temp)
         print(done_dict)
-    '''
     for v in id_process.values():
         v.join()
     print('exiting master thread. bye!')

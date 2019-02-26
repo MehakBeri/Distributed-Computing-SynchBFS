@@ -1,0 +1,60 @@
+
+mehakberi@mehakberi-Inspiron-5458:~/home/spring19/distributed/Distributed-Computing-SynchBFS/v4MB$ python3 main.py 3 1
+In master thread. Launching 3 threads..
+********** master broadcasting for round 1 ***********
+|| BFS LEVEL : 1
+{0: 1, 1: 2, 2: 3}
+1: BROADCAST <Message sender: Master receiver: 1 msg_type: broadcast-1>, 2
+2: BROADCAST <Message sender: Master receiver: 2 msg_type: broadcast-1>, 1
+3: BROADCAST <Message sender: Master receiver: 3 msg_type: broadcast-1>, 0
+1: sent <Message sender: 1 receiver: 2 msg_type: inter-thread> to queue, 1
+Master recieved done from 2
+1: sent <Message sender: 1 receiver: 3 msg_type: inter-thread> to queue, 2
+2: Terminating. Parent: None | Children: []
+Master recieved done from 1
+Master recieved done from 3
+1: Terminating. Parent: Root | Children: []
+3: Terminating. Parent: None | Children: []
+done status: [2, 1, 3]
+{"2": {"parent": null, "children": [], "marked": false}, "1": {"parent": "Root", "children": [], "marked": true}, "3": {"parent": null, "children": [], "marked": false}}
+********** master broadcasting for round 2 ***********
+|| BFS LEVEL : 1
+{0: 1, 1: 2, 2: 3}
+1: BROADCAST <Message sender: Master receiver: 1 msg_type: broadcast-2>, 3
+3: BROADCAST <Message sender: Master receiver: 3 msg_type: broadcast-2>, 2
+1: sent <Message sender: 1 receiver: 2 msg_type: inter-thread> to queue, 2
+2: BROADCAST <Message sender: Master receiver: 2 msg_type: broadcast-2>, 2
+1: sent <Message sender: 1 receiver: 3 msg_type: inter-thread> to queue, 3
+Master recieved done from 1
+Master recieved done from 3
+3: Terminating. Parent: None | Children: []
+1: Terminating. Parent: Root | Children: []
+Master recieved done from 2
+done status: [1, 3, 2]
+2: Terminating. Parent: None | Children: []
+{"1": {"parent": "Root", "children": [], "marked": true}, "3": {"parent": null, "children": [], "marked": false}, "2": {"parent": null, "children": [], "marked": false}}
+********** master broadcasting for round 3 ***********
+|| BFS LEVEL : 1
+{0: 1, 1: 2, 2: 3}
+2: BROADCAST <Message sender: Master receiver: 2 msg_type: broadcast-3>, 3
+3: BROADCAST <Message sender: Master receiver: 3 msg_type: broadcast-3>, 3
+2: Receiving msg <Message sender: 1 receiver: 2 msg_type: inter-thread>, 3
+|| BFS LEVEL : 2
+3: Receiving msg <Message sender: 1 receiver: 3 msg_type: inter-thread>, 2
+|| BFS LEVEL : 3
+1: BROADCAST <Message sender: Master receiver: 1 msg_type: broadcast-3>, 1
+3 -- informing parent 1
+2 -- informing parent 1
+1: sent <Message sender: 1 receiver: 2 msg_type: inter-thread> to queue, 4
+1: sent <Message sender: 1 receiver: 3 msg_type: inter-thread> to queue, 6
+Master recieved done from 2
+1 -- Added 3 to my children
+Master recieved done from 3
+2: Terminating. Parent: 1 | Children: []
+1 -- Added 2 to my children
+3: Terminating. Parent: 1 | Children: []
+Master recieved done from 1
+done status: [2, 3, 1]
+1: Terminating. Parent: Root | Children: [3, 2]
+{"2": {"parent": 1, "children": [], "marked": true}, "3": {"parent": 1, "children": [], "marked": true}, "1": {"parent": "Root", "children": [3, 2], "marked": true}}
+exiting master thread. bye!
